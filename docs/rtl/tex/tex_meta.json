@@ -1,0 +1,8 @@
+{reg: [
+  {bits: 5, name: "Texture Format"},
+  {bits: 4, name: "Height Exponent"},
+  {bits: 4, name: "Width Exponent"},
+  {bits: 19},
+  {bits: 32, name: "Texture Data Address"}
+  
+], config: {bits: 64, hspace:"888", lanes:2}}

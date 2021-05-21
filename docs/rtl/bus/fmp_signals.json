@@ -1,0 +1,16 @@
+{signal: [
+  {name: 'clk', wave: 'p...........'},
+  {},
+  ["FMP-out",
+	{name: 'fmpa_ready', wave: '0..1.....0..'},
+    {name: "fmpa_tag", wave: "0..=.....0..", data: ["Target + Command to Device"]},
+	{name: 'fmpa_out', wave: "0..=.....0..", data: ["Data to Device"]},
+  ],
+  {},
+  [ "Device-out",
+  	{name: 'fmpa_valid', wave: "0.....1..0.."},
+    {name: "fmpa_in", wave: "0.....=..0..", data: ["Data to FMP"]},
+   {name: "fmpa_status", wave:"0.....=..0..", data: ["Status for FMP"]}
+  ],
+  {}
+]}

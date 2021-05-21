@@ -1,0 +1,5 @@
+{reg: [
+  {bits:5, name: "Metadata"},
+  {bits:3, name: "Destination"},
+  
+], config: {bits: 8, hspace:"444"}}
