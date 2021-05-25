@@ -5,7 +5,7 @@ Anf Floof
 Texture Address Generator
 */
 
-module anfFl_tex_addrCalc
+module anfFl_tex_addrGen
 	(
 		input [15:0] yPixel,
 		input [15:0] xPixel,
@@ -15,15 +15,17 @@ module anfFl_tex_addrCalc
 
 	localparam fmt_RGB_24 = 5'b000_00;
 	localparam fmt_RGBA_32 = 5'b001_00;
+
 	localparam fmt_RGB_16 = 5'b000_01;
 	localparam fmt_RGBA_16 = 5'b001_01;
 	localparam fmt_RGB_15 = 5'b010_01;
 	localparam fmt_RGBA_15_PUNCHTHROUGH  = 5'b011_01;
+
 	localparam fmt_RGB_ETC2 = 5'b000_10;
 	localparam fmt_RGBA_ETC2 = 5'b001_10;
-	localparam fmt_RGBA_ETC2_PUNCHTHROUGH = 5'b010_10;
 	localparam fmt_R_EAC_UNSIGNED = 5'b100_10;
 	localparam fmt_R_EAC_SIGNED = 5'b101_10;
+	
 	localparam fmt_RGB_24_TILED = 5'b000_11;
 	localparam fmt_RGBA_32_TILED = 5'b001_11;
 	localparam fmt_RGB_16_TILED = 5'b010_11;
@@ -32,10 +34,10 @@ module anfFl_tex_addrCalc
 	localparam fmt_R_16_TILED = 5'b101_11;
 
 
-	localparam fc_8bit = 2'b00;
-	localparam fc_2bytes = 2'b01;
-	localparam fc_compressed = 2'b10;
-	localparam fc_tiled = 2'b11;
+	localparam fc_8BPC = 2'b00;
+	localparam fc_16BITS = 2'b01;
+	localparam fc_COMPRESSED = 2'b10;
+	localparam fc_TILED = 2'b11;
 
 	wire [4:0] format;
 	wire [1:0] formatClass;
@@ -98,14 +100,14 @@ module anfFl_tex_addrCalc
 	
 	always @(*) begin
 		case(formatClass)
-			fc_8bit: begin
+			fc_8BPC: begin
 				if(format == fmt_RGB_24) relAddr = {15'b0, offsetPixels, 1'b0} + {16'b0, offsetPixels};
 				else if(format == fmt_RGBA_32) relAddr = {14'b0, offsetPixels, 2'b0}; 
 			end
-			fc_2bytes: begin 
+			fc_16BITS: begin 
 				relAddr = {15'b0, offsetPixels, 1'b0};
 			end
-			fc_compressed: begin
+			fc_COMPRESSED: begin
 				case(format)
 					fmt_RGB_ETC2: relAddr = {13'b0, comp_offsetBlocks, 3'b0};
 					fmt_RGBA_ETC2: relAddr = {12'b0, comp_offsetBlocks, 4'b0};
@@ -114,7 +116,7 @@ module anfFl_tex_addrCalc
 					default: relAddr = 32'b0;
 				endcase
 			end
-			fc_tiled: begin 
+			fc_TILED: begin 
 				case(format)
 					fmt_RGB_24_TILED: relAddr = {tiled_offsetPixels[30:0], 1'b0} + tiled_offsetPixels;
 					fmt_RGBA_32_TILED: relAddr = {tiled_offsetPixels[29:0], 2'b0};

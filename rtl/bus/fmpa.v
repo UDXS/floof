@@ -8,8 +8,8 @@ FMPA - Floof MultiProcessor Bus
 `define anfFl_FMPA_PORTS	output			FMPA_ready,	\
 							input			FMPA_valid, \
 							output [7:0]	FMPA_tag,	\
-							output [31:0]	FMPA_out,	\
-							input [31:0]	FMPA_in,	\
+							output [63:0]	FMPA_out,	\
+							input [63:0]	FMPA_in,	\
 
 
 `define anfFl_FMPA_ARGS	.FMPA_ready(FMPA_ready),		\
