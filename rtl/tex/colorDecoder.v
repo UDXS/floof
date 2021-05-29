@@ -7,13 +7,16 @@ Texture Color Parser
 
 module anfFl_tex_colorDecoder
 	(
-		input [127:0] data;
-		input [4:0] format;
-		output reg [7:0] R;
-		output reg [7:0] G;
-		output reg [7:0] B;
-		output reg [7:0] A;
+		input [127:0] data,
+		input [4:0] format,
 		
+		output reg [7:0] R,
+		output reg [7:0] G,
+		output reg [7:0] B,
+		output reg [7:0] A,
+		
+		input reg [1:0] texelX,
+		input reg [1:0] texelY
 	);
 
 	localparam fmt_RGB_24 = 5'b000_00;

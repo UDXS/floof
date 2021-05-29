@@ -10,7 +10,10 @@ module anfFl_tex_addrGen
 		input [15:0] yPixel,
 		input [15:0] xPixel,
 		input [63:0] texMeta,
-		output reg [31:0] addr
+
+		output reg [31:0] addr,
+		output reg [3:0] yTexel,
+		output reg [3:0] xTexel
 	);
 
 	localparam fmt_RGB_24 = 5'b000_00;
@@ -99,6 +102,9 @@ module anfFl_tex_addrGen
 	reg[31:0] relAddr;
 	
 	always @(*) begin
+		yTexel = xPixel[3:0];
+		xTexel = yPixel[3:0];
+
 		case(formatClass)
 			fc_8BPC: begin
 				if(format == fmt_RGB_24) relAddr = {15'b0, offsetPixels, 1'b0} + {16'b0, offsetPixels};
