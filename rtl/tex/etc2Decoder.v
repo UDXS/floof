@@ -150,7 +150,7 @@ module anfFl_tex_etc2Decoder
 	wire [9:0] texelColorShiftedG;
 	wire [9:0] texelColorShiftedB;
 
-	assign blockColorShiftedR = {1'b0, quadColor[{yTexel[1], xTexel[1]}][23:15], 1'b0};
+	assign blockColorShiftedR = {1'b0, quadColor[{yTexel[1], xTexel[1]}][23:16], 1'b0};
 	assign blockColorShiftedG = {1'b0, quadColor[{yTexel[1], xTexel[1]}][15:8], 1'b0};
 	assign blockColorShiftedB = {1'b0, quadColor[{yTexel[1], xTexel[1]}][7:0], 1'b0};
 	assign codebookValueShifted = {1'b0, codebookValueUnsigned, 1'b0};
