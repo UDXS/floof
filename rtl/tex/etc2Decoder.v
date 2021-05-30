@@ -5,6 +5,8 @@ Anf Floof
 ETC2 Texture Block Decoder
 */
 
+`default nettype none
+
 module anfFl_tex_etc2Decoder
 	(
 		input [127:0] data,

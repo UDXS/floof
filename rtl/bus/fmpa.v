@@ -5,6 +5,8 @@ Anf Floof
 FMPA - Floof MultiProcessor Bus
 */
 
+`default nettype none
+
 `define anfFl_FMPA_PORTS	output			FMPA_ready,	\
 							input			FMPA_valid, \
 							output [7:0]	FMPA_tag,	\

@@ -2,9 +2,10 @@
 Anf Floof
 32-bit Embedded 3D Graphics Processor
 
-TEX - Texture Sampling Unit
-Coordinate Denormalization Unit
+Texture Coordinate Denormalization Unit
 */
+
+`default nettype none
 
 module anfFl_tex_coordDenorm
 	(

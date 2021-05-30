@@ -5,6 +5,8 @@ Anf Floof
 Texture Data Fetcher
 */
 
+`default nettype none
+
 module anfFl_tex_memData
 	(
 		input reset,
