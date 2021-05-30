@@ -15,8 +15,8 @@ module anfFl_tex_etc2Decoder
 		output reg [7:0] B,
 		output reg [7:0] A,
 
-		input reg [1:0] xTexel,
-		input reg [1:0] yTexel
+		input [1:0] xTexel,
+		input [1:0] yTexel
 	);
 
 	wire [7:0] redChannel;
@@ -61,6 +61,10 @@ module anfFl_tex_etc2Decoder
 	wire [7:0] c1B;
 	wire [7:0] c1G;
 
+	wire [9:0] longBaseR;
+	wire [9:0] longBaseG;
+	wire [9:0] longBaseB;
+
 	wire [7:0] baseR;
 	wire [7:0] baseG;
 	wire [7:0] baseB;
@@ -69,13 +73,17 @@ module anfFl_tex_etc2Decoder
 	wire [7:0] diffG;
 	wire [7:0] diffB;
 
-	assign baseR = {2{redChannel[4:0]}}[9:2];
-	assign baseG = {2{greenChannel[4:0]}}[9:2];
-	assign baseB = {2{blueChannel[4:0]}}[9:2];
+	assign longBaseR = {2{redChannel[4:0]}};
+	assign longBaseG = {2{greenChannel[4:0]}};
+	assign longBaseB = {2{blueChannel[4:0]}};
 
-	assign diffR = {5{redChannel[2]}, redChannel[2:0]};
-	assign diffG = {5{greenChannel[2]}, greenChannel[2:0]};
-	assign diffB = {5{blueChannel[2]}, blueChannel[2:0]};
+	assign baseR = longBaseR[9:2];
+	assign baseG = longBaseG[9:2];
+	assign baseB = longBaseB[9:2];
+
+	assign diffR = {{5{redChannel[2]}}, redChannel[2:0]};
+	assign diffG = {{5{greenChannel[2]}}, greenChannel[2:0]};
+	assign diffB = {{5{blueChannel[2]}}, blueChannel[2:0]};
 
 	assign c0R = diff ? baseR : {2{redChannel[3:0]}};
 	assign c0G = diff ? baseG : {2{blueChannel[3:0]}};
@@ -102,7 +110,7 @@ module anfFl_tex_etc2Decoder
 	assign quadCodeword[0] = cw0;
 	assign quadCodeword[1] = flip ? cw0 : cw1;
 	assign quadCodeword[2] = flip ? cw1 : cw0;
-	assign q3cw[3] = cw1;
+	assign quadCodeword[3] = cw1;
 
 	wire [23:0] quadColor [0:3];
 	assign quadColor[0] = {c0R, c0G, c0B};
@@ -120,10 +128,10 @@ module anfFl_tex_etc2Decoder
 	wire [3:0] codebookValueIndex;
 	wire [7:0] codebookValueUnsigned;
 
-	assign texelOffset = {yTexel, texelX};
+	assign texelOffset = {yTexel, xTexel};
 	assign texelIndex = {texelOffset, 1'b0};
 
-	assign codeword = quadCodeword[{y[1], x[1]}];
+	assign codeword = quadCodeword[{yTexel[1], xTexel[1]}];
 
 	assign codebookRowIndex = pixelIndicies[texelIndex | 5'b1];
 	assign codebookRowSign = pixelIndicies[texelIndex];
@@ -133,16 +141,18 @@ module anfFl_tex_etc2Decoder
 
 
 	// Move 8-bit value into middle of 10-bit container to allow underflow/overflow checking.
-	wire [9:0] blockColorShifted;
+	wire [9:0] blockColorShiftedR;
+	wire [9:0] blockColorShiftedG;
+	wire [9:0] blockColorShiftedB;
 	wire [9:0] codebookValueShifted;
 
 	wire [9:0] texelColorShiftedR;
 	wire [9:0] texelColorShiftedG;
 	wire [9:0] texelColorShiftedB;
 
-	assign blockColorShiftedR = {1'b0, quadColor[{y[1], x[1]}][23:15], 1'b0};
-	assign blockColorShiftedG = {1'b0, quadColor[{y[1], x[1]}][15:8], 1'b0};
-	assign blockColorShiftedB = {1'b0, quadColor[{y[1], x[1]}][7:0], 1'b0};
+	assign blockColorShiftedR = {1'b0, quadColor[{yTexel[1], xTexel[1]}][23:15], 1'b0};
+	assign blockColorShiftedG = {1'b0, quadColor[{yTexel[1], xTexel[1]}][15:8], 1'b0};
+	assign blockColorShiftedB = {1'b0, quadColor[{yTexel[1], xTexel[1]}][7:0], 1'b0};
 	assign codebookValueShifted = {1'b0, codebookValueUnsigned, 1'b0};
 
 	assign texelColorShiftedR = codebookRowSign ? blockColorShiftedR - codebookValueShifted : blockColorShiftedR + codebookValueShifted;
@@ -156,20 +166,20 @@ module anfFl_tex_etc2Decoder
 		B = texelColorShiftedR[8:1];
 
 		//Clamps
-		if(texelColorShiftedR[0])
+		if(texelColorShiftedR[0]) 
 			R = 8'h00;
-		else if(texelColorShiftedR[9])
-			R = 8'hFF
+		else if (texelColorShiftedR[9]) 
+			R = 8'hFF;
 
 		if(texelColorShiftedG[0])
 			G = 8'h00;
 		else if(texelColorShiftedG[9])
-			G = 8'hFF
+			G = 8'hFF;
 
 		if(texelColorShiftedB[0])
 			B = 8'h00;
 		else if(texelColorShiftedB[9])
-			B = 8'hFF
+			B = 8'hFF;
 		
 	end
 
