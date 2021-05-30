@@ -5,13 +5,15 @@ Anf Floof
 Texture Address Generator
 */
 
+`default nettype none
+
 module anfFl_tex_addrGen
 	(
 		input [15:0] yPixel,
 		input [15:0] xPixel,
 		input [63:0] texMeta,
 
-		output reg [31:0] addr,
+		output reg [31:0] address,
 		output reg [3:0] yTexel,
 		output reg [3:0] xTexel
 	);
