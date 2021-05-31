@@ -75,9 +75,9 @@ module anfFl_tex_etc2Decoder
 	wire [7:0] diffG;
 	wire [7:0] diffB;
 
-	assign longBaseR = {2{redChannel[7:4]}};
-	assign longBaseG = {2{greenChannel[7:4]}};
-	assign longBaseB = {2{blueChannel[7:4]}};
+	assign longBaseR = {2{redChannel[7:3]}};
+	assign longBaseG = {2{greenChannel[7:3]}};
+	assign longBaseB = {2{blueChannel[7:3]}};
 
 	assign baseR = longBaseR[9:2];
 	assign baseG = longBaseG[9:2];
@@ -180,6 +180,7 @@ module anfFl_tex_etc2Decoder
 	assign texelColorShiftedB = codebookRowSign ? blockColorShiftedB - codebookValueShifted : blockColorShiftedB + codebookValueShifted;
 
 	// ETC2 T-Mode decoding
+
 
 
 	always @(*) begin
