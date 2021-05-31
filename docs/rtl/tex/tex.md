@@ -65,7 +65,7 @@ Width and height are stored as exponents to the base of 2 i.e `width = 2^widthEx
 | `0b000 10`        | `RGB_ETC2`             |                         |
 | `0b001 10`        | `RGBA_ETC2`            |                         |
 | `0b010 10`        | RESERVED               |                         |
-| `0b100 10`        | `R_EAC_UNSIGNED`       |                         |
+| `0b100 10`        | RESERVED               |                         |
 | `0b101 10`        | `R_EAC_SIGNED`         |                         |
 | `0b000 11`        | `RGB_24_TILED`         | 16x16 tiles             |
 | `0b001 11`        | `RGBA_32_TILED`        | 16x16 tiles             |

@@ -29,7 +29,6 @@ module anfFl_tex_addrGen
 	localparam fmt_RGB_ETC2 = 5'b000_10;
 	localparam fmt_RGBA_ETC2 = 5'b001_10;
 	localparam fmt_R_EAC_UNSIGNED = 5'b100_10;
-	localparam fmt_R_EAC_SIGNED = 5'b101_10;
 	
 	localparam fmt_RGB_24_TILED = 5'b000_11;
 	localparam fmt_RGBA_32_TILED = 5'b001_11;
@@ -120,7 +119,6 @@ module anfFl_tex_addrGen
 					fmt_RGB_ETC2: relAddr = {13'b0, comp_offsetBlocks, 3'b0};
 					fmt_RGBA_ETC2: relAddr = {12'b0, comp_offsetBlocks, 4'b0};
 					fmt_R_EAC_UNSIGNED: relAddr = {13'b0, comp_offsetBlocks, 3'b0};
-					fmt_R_EAC_SIGNED: relAddr = {13'b0, comp_offsetBlocks, 3'b0};
 					default: relAddr = 32'b0;
 				endcase
 			end
