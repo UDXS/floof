@@ -179,6 +179,7 @@ module anfFl_tex_etc2Decoder
 	assign texelColorShiftedG = codebookRowSign ? blockColorShiftedG - codebookValueShifted : blockColorShiftedG + codebookValueShifted;
 	assign texelColorShiftedB = codebookRowSign ? blockColorShiftedB - codebookValueShifted : blockColorShiftedB + codebookValueShifted;
 
+
 	// ETC2 T-Mode decoding
 
 	wire [7:0] tR0;
@@ -208,13 +209,13 @@ module anfFl_tex_etc2Decoder
 	wire [7:0] tAddend;
 	wire [23:0] tColor;
 
-	assign tAddend = tMode[1] ? ~tCodevalue + 1 : tCodevalue;
-
-	assign tColor = |tMode ?  {tR1, tG1, tB1} : {tR0, tG0, tB0};
-
 	wire [7:0] tResR;
 	wire [7:0] tResG;
 	wire [7:0] tResB;
+
+	assign tAddend = tMode[1] ? ~tCodevalue + 1 : tCodevalue;
+	assign tColor = |tMode ?  {tR1, tG1, tB1} : {tR0, tG0, tB0};
+
 	assign tResR = tMode[0] ? tColor[23:16] + tAddend : tColor[23:16];
 	assign tResG = tMode[0] ? tColor[15:8] + tAddend : tColor[15:8];
 	assign tResB = tMode[0] ? tColor[7:0] + tAddend : tColor[7:0];
@@ -222,9 +223,9 @@ module anfFl_tex_etc2Decoder
 
 	always @(*) begin
 
-		if(diff && |{diffOverflowR, diffOverflowG, diffOverflowB}) begin // ETC2 Modes
-			if(diffOverflowR) begin // T-mode
-			
+		if (diff && |{diffOverflowR, diffOverflowG, diffOverflowB}) begin // ETC2 Modes
+			if (diffOverflowR) begin // T-mode
+
 				R = tResR;
 				G = tResG;
 				B = tResB;
@@ -242,19 +243,19 @@ module anfFl_tex_etc2Decoder
 			B = texelColorShiftedR[8:1];
 
 			//Clamps
-			if(texelColorShiftedR[0]) 
+			if (texelColorShiftedR[0]) 
 				R = 8'h00;
 			else if (texelColorShiftedR[9]) 
 				R = 8'hFF;
 			
-			if(texelColorShiftedG[0])
+			if (texelColorShiftedG[0])
 				G = 8'h00;
 			else if(texelColorShiftedG[9])
 				G = 8'hFF;
 			
-			if(texelColorShiftedB[0])
+			if (texelColorShiftedB[0])
 				B = 8'h00;
-			else if(texelColorShiftedB[9])
+			else if (texelColorShiftedB[9])
 				B = 8'hFF;
 		
 		end
