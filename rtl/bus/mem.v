@@ -5,7 +5,7 @@ Anf Floof
 Memory Bus
 */
 
-`default nettype none
+`default_nettype none
 
 `define anfFl_MEM_RD_PORTS   output [31:0]	rd_addr,	\
 							input [63:0]	rd_data,	\

@@ -5,7 +5,7 @@ Anf Floof
 Texture Color Fixed-Point Normalizer
 */
 
-`default nettype none
+`default_nettype none
 
 module anfFl_tex_colorNorm
 	(

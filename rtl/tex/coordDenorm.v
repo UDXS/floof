@@ -5,7 +5,7 @@ Anf Floof
 Texture Coordinate Denormalization Unit
 */
 
-`default nettype none
+`default_nettype none
 
 module anfFl_tex_coordDenorm
 	(

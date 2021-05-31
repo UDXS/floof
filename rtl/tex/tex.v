@@ -5,7 +5,7 @@ Anf Floof
 TEX - Texture Sampling Unit
 */
 
-`default nettype none
+`default_nettype none
 
 `include "bus/fmpa.v"
 `include "bus/mem.v"

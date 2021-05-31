@@ -5,7 +5,7 @@ Anf Floof
 Texture Data Fetcher
 */
 
-`default nettype none
+`default_nettype none
 
 module anfFl_tex_memData
 	(
