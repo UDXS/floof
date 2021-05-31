@@ -5,7 +5,7 @@ Anf Floof
 ETC2 Texture Block Decoder
 */
 
-`default nettype none
+`default_nettype none
 
 module anfFl_tex_etc2Decoder
 	(
@@ -91,12 +91,30 @@ module anfFl_tex_etc2Decoder
 	assign c0G = diff ? baseG : {2{blueChannel[3:0]}};
 	assign c0B = diff ? baseB : {2{greenChannel[3:0]}};
 
-	assign c1R = diff ? (baseR + diffR) : {2{redChannel[7:4]}};
-	assign c1G = diff ? (baseG + diffG) : {2{blueChannel[7:4]}};
-	assign c1B = diff ? (baseB + diffB) : {2{greenChannel[7:4]}};
+	wire [8:0] diffModeR;
+	wire [8:0] diffModeG;
+	wire [8:0] diffModeB;
+
+	assign diffModeR = baseR + diffR;
+	assign diffModeG = baseG + diffG;
+	assign diffModeB = baseB + diffB;
+	
+	assign diffOverflowR = diffModeR[8];
+	assign diffOverflowG = diffModeG[8];
+	assign diffOverflowB = diffModeB[8];
+
+	assign c1R = diff ? diffModeR[7:0] : {2{redChannel[7:4]}};
+	assign c1G = diff ? diffModeG[7:0] : {2{greenChannel[7:4]}};
+	assign c1B = diff ? diffModeB[7:0] : {2{blueChannel[7:4]}};
 
 	// ETC2 modes are engaged by triggering overflow on various channels in differential mode.
+	wire diffOverflowR;
+	wire diffOverflowG;
+	wire diffOverflowB;
 
+	assign diffOverflowR = diffModeR[8];
+	assign diffOverflowG = diffModeG[8];
+	assign diffOverflowB = diffModeB[8];
 
 	/*
 		Codewords for each 2x2 quadrant
@@ -161,28 +179,44 @@ module anfFl_tex_etc2Decoder
 	assign texelColorShiftedG = codebookRowSign ? blockColorShiftedG - codebookValueShifted : blockColorShiftedG + codebookValueShifted;
 	assign texelColorShiftedB = codebookRowSign ? blockColorShiftedB - codebookValueShifted : blockColorShiftedB + codebookValueShifted;
 
+	// ETC2 T-Mode decoding
+
+
 	always @(*) begin
 
-		R = texelColorShiftedR[8:1];
-		G = texelColorShiftedR[8:1];
-		B = texelColorShiftedR[8:1];
+		if(diff && |{diffOverflowR, diffOverflowG, diffOverflowB}) begin // ETC2 Modes
+			if(diffOverflowR) begin // T-mode
+				
+			end else if (diffOverflowG) begin // H-mode
 
-		//Clamps
-		if(texelColorShiftedR[0]) 
-			R = 8'h00;
-		else if (texelColorShiftedR[9]) 
-			R = 8'hFF;
+			end else if (diffOverflowB) begin // Planar mode
+			
+			end
 
-		if(texelColorShiftedG[0])
-			G = 8'h00;
-		else if(texelColorShiftedG[9])
-			G = 8'hFF;
+		end else begin // ETC1 mode
+			
+			R = texelColorShiftedR[8:1];
+			G = texelColorShiftedR[8:1];
+			B = texelColorShiftedR[8:1];
 
-		if(texelColorShiftedB[0])
-			B = 8'h00;
-		else if(texelColorShiftedB[9])
-			B = 8'hFF;
+			//Clamps
+			if(texelColorShiftedR[0]) 
+				R = 8'h00;
+			else if (texelColorShiftedR[9]) 
+				R = 8'hFF;
+			
+			if(texelColorShiftedG[0])
+				G = 8'h00;
+			else if(texelColorShiftedG[9])
+				G = 8'hFF;
+			
+			if(texelColorShiftedB[0])
+				B = 8'h00;
+			else if(texelColorShiftedB[9])
+				B = 8'hFF;
 		
+		end
+
 	end
 
 endmodule
