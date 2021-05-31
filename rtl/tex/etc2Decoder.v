@@ -47,7 +47,7 @@ module anfFl_tex_etc2Decoder
 	assign pixelIndicies = data[63:32];
 
 	reg [7:0] codebookETC1 [0:15]; // 8 codewords x 4 pixel indicies / 2 (last 16 values = -1 * first 16)
-	reg [7:0] codebookETC2 [0:15]; // 8 codewords x 4 pixel indicies / 2 (last 16 values = -1 * first 16)
+	reg [7:0] codebookETC2 [0:7]; // 8 codewords
 	
 	initial begin
 		$readmemh("codebookETC1.dat", codebookETC1);
@@ -181,13 +181,54 @@ module anfFl_tex_etc2Decoder
 
 	// ETC2 T-Mode decoding
 
+	wire [7:0] tR0;
+	wire [7:0] tG0;
+	wire [7:0] tB0;
+
+	wire [7:0] tR1;
+	wire [7:0] tG1;
+	wire [7:0] tB1;
+
+	assign tR0 = {2{redChannel[4:3], redChannel[1:0]}};
+	assign tG0 = {2{greenChannel[7:4]}};
+	assign tB0 = {2{greenChannel[3:0]}};
+
+	assign tR1 = {2{blueChannel[7:4]}};
+	assign tG1 = {2{blueChannel[3:0]}};
+	assign tB1 = {2{cwf[7:4]}};
+
+	wire [2:0] tCodeword;
+	wire [7:0] tCodevalue;
+	wire [1:0] tMode;
+
+	assign tCodeword = {cwf[3:2],cwf[0]};
+	assign tCodevalue = codebookETC2[tCodeword];
+	assign tMode = pixelIndicies[texelIndex +: 2];
+
+	wire [7:0] tAddend;
+	wire [23:0] tColor;
+
+	assign tAddend = tMode[1] ? ~tCodevalue + 1 : tCodevalue;
+
+	assign tColor = |tMode ?  {tR1, tG1, tB1} : {tR0, tG0, tB0};
+
+	wire [7:0] tResR;
+	wire [7:0] tResG;
+	wire [7:0] tResB;
+	assign tResR = tMode[0] ? tColor[23:16] + tAddend : tColor[23:16];
+	assign tResG = tMode[0] ? tColor[15:8] + tAddend : tColor[15:8];
+	assign tResB = tMode[0] ? tColor[7:0] + tAddend : tColor[7:0];
 
 
 	always @(*) begin
 
 		if(diff && |{diffOverflowR, diffOverflowG, diffOverflowB}) begin // ETC2 Modes
 			if(diffOverflowR) begin // T-mode
-				
+			
+				R = tResR;
+				G = tResG;
+				B = tResB;
+
 			end else if (diffOverflowG) begin // H-mode
 
 			end else if (diffOverflowB) begin // Planar mode
