@@ -37,10 +37,10 @@ module anfFl_tex_etc2Decoder
 	wire diff;
 	wire flip;
 
-	assign cw0 = cwf[2:0];
-	assign cw1 = cwf[5:3];
-	assign diff = cwf[6];
-	assign flip = cwf[7];
+	assign cw0 = cwf[7:5];
+	assign cw1 = cwf[4:2];
+	assign diff = cwf[1];
+	assign flip = cwf[0];
 	
 	wire [31:0] pixelIndicies;
 	
@@ -75,9 +75,9 @@ module anfFl_tex_etc2Decoder
 	wire [7:0] diffG;
 	wire [7:0] diffB;
 
-	assign longBaseR = {2{redChannel[4:0]}};
-	assign longBaseG = {2{greenChannel[4:0]}};
-	assign longBaseB = {2{blueChannel[4:0]}};
+	assign longBaseR = {2{redChannel[7:4]}};
+	assign longBaseG = {2{greenChannel[7:4]}};
+	assign longBaseB = {2{blueChannel[7:4]}};
 
 	assign baseR = longBaseR[9:2];
 	assign baseG = longBaseG[9:2];
@@ -87,9 +87,9 @@ module anfFl_tex_etc2Decoder
 	assign diffG = {{5{greenChannel[2]}}, greenChannel[2:0]};
 	assign diffB = {{5{blueChannel[2]}}, blueChannel[2:0]};
 
-	assign c0R = diff ? baseR : {2{redChannel[3:0]}};
-	assign c0G = diff ? baseG : {2{blueChannel[3:0]}};
-	assign c0B = diff ? baseB : {2{greenChannel[3:0]}};
+	assign c0R = diff ? baseR : {2{redChannel[7:4]}};
+	assign c0G = diff ? baseG : {2{blueChannel[7:4]}};
+	assign c0B = diff ? baseB : {2{greenChannel[7:4]}};
 
 	wire [8:0] diffModeR;
 	wire [8:0] diffModeG;
@@ -103,9 +103,9 @@ module anfFl_tex_etc2Decoder
 	assign diffOverflowG = diffModeG[8];
 	assign diffOverflowB = diffModeB[8];
 
-	assign c1R = diff ? diffModeR[7:0] : {2{redChannel[7:4]}};
-	assign c1G = diff ? diffModeG[7:0] : {2{greenChannel[7:4]}};
-	assign c1B = diff ? diffModeB[7:0] : {2{blueChannel[7:4]}};
+	assign c1R = diff ? diffModeR[7:0] : {2{redChannel[3:0]}};
+	assign c1G = diff ? diffModeG[7:0] : {2{greenChannel[3:0]}};
+	assign c1B = diff ? diffModeB[7:0] : {2{blueChannel[3:0]}};
 
 	// ETC2 modes are engaged by triggering overflow on various channels in differential mode.
 	wire diffOverflowR;
@@ -148,13 +148,13 @@ module anfFl_tex_etc2Decoder
 	wire [3:0] codebookValueIndex;
 	wire [7:0] codebookValueUnsigned;
 
-	assign texelOffset = {yTexel, xTexel};
+	assign texelOffset = {yTexel, ~xTexel};
 	assign texelIndex = {texelOffset, 1'b0};
 
 	assign codeword = quadCodeword[{yTexel[1], xTexel[1]}];
 
-	assign codebookRowIndex = pixelIndicies[texelIndex | 5'b1];
-	assign codebookRowSign = pixelIndicies[texelIndex];
+	assign codebookRowIndex = pixelIndicies[texelIndex];
+	assign codebookRowSign = pixelIndicies[texelIndex | 5'b1];
 
 	assign codebookValueIndex = {codeword, codebookRowIndex};
 	assign codebookValueUnsigned = codebookETC1[codebookValueIndex];
