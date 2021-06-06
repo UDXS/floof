@@ -7,6 +7,15 @@ ETC2 Texture Block Decoder
 
 `default_nettype none
 
+
+function [7:0] extend5bTo8b(input [4:0] in);
+	reg [9:0] extended;
+	extended = {2{in}};
+
+	extend5bTo8b = extended[9:2];
+endfunction
+
+
 module anfFl_tex_etc2Decoder
 	(
 		input [127:0] data,
@@ -17,20 +26,20 @@ module anfFl_tex_etc2Decoder
 		output reg [7:0] B,
 		output reg [7:0] A,
 
-		input [1:0] xTexel,
-		input [1:0] yTexel
+		input [1:0] uTexel,
+		input [1:0] vTexel
 	);
 
 	wire [7:0] redChannel;
 	wire [7:0] blueChannel;
 	wire [7:0] greenChannel;
 
-	assign redChannel = data[7:0];
-	assign blueChannel = data[15:8];
-	assign greenChannel = data[23:16];
+	assign redChannel = data[63:56];
+	assign blueChannel = data[55:48];
+	assign greenChannel = data[47:40];
 
 	wire [7:0] cwf;
-	assign cwf = data[31:24];
+	assign cwf = data[39:32];
 	
 	wire [2:0] cw0;
 	wire [2:0] cw1;
@@ -44,7 +53,7 @@ module anfFl_tex_etc2Decoder
 	
 	wire [31:0] pixelIndicies;
 	
-	assign pixelIndicies = data[63:32];
+	assign pixelIndicies = data[31:0];
 
 	reg [7:0] codebookETC1 [0:15]; // 8 codewords x 4 pixel indicies / 2 (last 16 values = -1 * first 16)
 	reg [7:0] codebookETC2 [0:7]; // 8 codewords
@@ -54,7 +63,6 @@ module anfFl_tex_etc2Decoder
 		$readmemh("codebookETC2.dat", codebookETC2);
 	end
 
-
 	wire [7:0] c0R;
 	wire [7:0] c0B;
 	wire [7:0] c0G;
@@ -63,66 +71,55 @@ module anfFl_tex_etc2Decoder
 	wire [7:0] c1B;
 	wire [7:0] c1G;
 
-	wire [9:0] longBaseR;
-	wire [9:0] longBaseG;
-	wire [9:0] longBaseB;
+	wire [4:0] baseR;
+	wire [4:0] baseG;
+	wire [4:0] baseB;
 
-	wire [7:0] baseR;
-	wire [7:0] baseG;
-	wire [7:0] baseB;
+	wire [4:0] diffR;
+	wire [4:0] diffG;
+	wire [4:0] diffB;
 
-	wire [7:0] diffR;
-	wire [7:0] diffG;
-	wire [7:0] diffB;
+	assign baseR = redChannel[7:3];
+	assign baseG = greenChannel[7:3];
+	assign baseB = blueChannel[7:3];
 
-	assign longBaseR = {2{redChannel[7:3]}};
-	assign longBaseG = {2{greenChannel[7:3]}};
-	assign longBaseB = {2{blueChannel[7:3]}};
+	assign diffR = {{2{redChannel[2]}}, redChannel[2:0]};
+	assign diffG = {{2{greenChannel[2]}}, greenChannel[2:0]};
+	assign diffB = {{2{blueChannel[2]}}, blueChannel[2:0]};
 
-	assign baseR = longBaseR[9:2];
-	assign baseG = longBaseG[9:2];
-	assign baseB = longBaseB[9:2];
+	assign c0R = diff ? extend5bTo8b(baseR) : {2{redChannel[7:4]}};
+	assign c0G = diff ? extend5bTo8b(baseG) : {2{blueChannel[7:4]}};
+	assign c0B = diff ? extend5bTo8b(baseB) : {2{greenChannel[7:4]}};
 
-	assign diffR = {{5{redChannel[2]}}, redChannel[2:0]};
-	assign diffG = {{5{greenChannel[2]}}, greenChannel[2:0]};
-	assign diffB = {{5{blueChannel[2]}}, blueChannel[2:0]};
+	wire [5:0] shortDiffR;
+	wire [5:0] shortDiffG;
+	wire [5:0] shortDiffB;
 
-	assign c0R = diff ? baseR : {2{redChannel[7:4]}};
-	assign c0G = diff ? baseG : {2{blueChannel[7:4]}};
-	assign c0B = diff ? baseB : {2{greenChannel[7:4]}};
+	assign shortDiffR = baseR + diffR;
+	assign shortDiffG = baseG + diffG;
+	assign shortDiffB = baseB + diffB;
 
-	wire [8:0] diffModeR;
-	wire [8:0] diffModeG;
-	wire [8:0] diffModeB;
-
-	assign diffModeR = baseR + diffR;
-	assign diffModeG = baseG + diffG;
-	assign diffModeB = baseB + diffB;
-	
-	assign diffOverflowR = diffModeR[8];
-	assign diffOverflowG = diffModeG[8];
-	assign diffOverflowB = diffModeB[8];
-
-	assign c1R = diff ? diffModeR[7:0] : {2{redChannel[3:0]}};
-	assign c1G = diff ? diffModeG[7:0] : {2{greenChannel[3:0]}};
-	assign c1B = diff ? diffModeB[7:0] : {2{blueChannel[3:0]}};
+	assign c1R = diff ? extend5bTo8b(shortDiffR[4:0]) : {2{redChannel[3:0]}};
+	assign c1G = diff ? extend5bTo8b(shortDiffG[4:0]) : {2{greenChannel[3:0]}};
+	assign c1B = diff ? extend5bTo8b(shortDiffB[4:0]) : {2{blueChannel[3:0]}};
 
 	// ETC2 modes are engaged by triggering overflow on various channels in differential mode.
 	wire diffOverflowR;
 	wire diffOverflowG;
 	wire diffOverflowB;
 
-	assign diffOverflowR = diffModeR[8];
-	assign diffOverflowG = diffModeG[8];
-	assign diffOverflowB = diffModeB[8];
+	assign diffOverflowR = shortDiffR[5];
+	assign diffOverflowG = shortDiffG[5];
+	assign diffOverflowB = shortDiffB[5];
+
 
 	/*
 		Codewords for each 2x2 quadrant
 	 	0	1
 		2	3
 
-		flip = 0: q0, q2 = cw0; q1, q3 = cw1;  
-		flip = 1: q0, q1 = cw0; q2, q3 = cw1;  
+		flip = 0: {q0, q2} = cw0; {q1, q3} = cw1;  
+		flip = 1: {q0, q1} = cw0; {q2, q3} = cw1;  
 	*/
 
 	wire [2:0] quadCodeword [0:3];
@@ -138,27 +135,24 @@ module anfFl_tex_etc2Decoder
 	assign quadColor[2] = flip ? {c1R, c1G, c1B} : {c0R, c0G, c0B};
 	assign quadColor[3] = {c1R, c1G, c1B};
 
-	wire [3:0] texelOffset;
-	wire [4:0] texelIndex;
+	wire [1:0] quadIndex;
 	wire [2:0] codeword;
 
-	wire codebookRowIndex;
-	wire codebookRowSign;
+	assign quadIndex = {vTexel[1], uTexel[1]};
+
+	assign codeword = quadCodeword[quadIndex];
+
+	wire [3:0] texelIndex;
+	wire [1:0] pixelIndexValue;
+
+	assign texelIndex = {uTexel, vTexel};
+	assign pixelIndexValue = {pixelIndicies[{1'b1, texelIndex}], pixelIndicies[{1'b0, texelIndex}]};
 
 	wire [3:0] codebookValueIndex;
 	wire [7:0] codebookValueUnsigned;
 
-	assign texelOffset = {yTexel, ~xTexel};
-	assign texelIndex = {texelOffset, 1'b0};
-
-	assign codeword = quadCodeword[{yTexel[1], xTexel[1]}];
-
-	assign codebookRowIndex = pixelIndicies[texelIndex];
-	assign codebookRowSign = pixelIndicies[texelIndex | 5'b1];
-
-	assign codebookValueIndex = {codeword, codebookRowIndex};
+	assign codebookValueIndex = {codeword, pixelIndexValue[0]};
 	assign codebookValueUnsigned = codebookETC1[codebookValueIndex];
-
 
 	// Move 8-bit value into middle of 10-bit container to allow underflow/overflow checking.
 	wire [9:0] blockColorShiftedR;
@@ -170,14 +164,14 @@ module anfFl_tex_etc2Decoder
 	wire [9:0] texelColorShiftedG;
 	wire [9:0] texelColorShiftedB;
 
-	assign blockColorShiftedR = {1'b0, quadColor[{yTexel[1], xTexel[1]}][23:16], 1'b0};
-	assign blockColorShiftedG = {1'b0, quadColor[{yTexel[1], xTexel[1]}][15:8], 1'b0};
-	assign blockColorShiftedB = {1'b0, quadColor[{yTexel[1], xTexel[1]}][7:0], 1'b0};
+	assign blockColorShiftedR = {1'b0, quadColor[quadIndex][23:16], 1'b0};
+	assign blockColorShiftedG = {1'b0, quadColor[quadIndex][15:8], 1'b0};
+	assign blockColorShiftedB = {1'b0, quadColor[quadIndex][7:0], 1'b0};
 	assign codebookValueShifted = {1'b0, codebookValueUnsigned, 1'b0};
 
-	assign texelColorShiftedR = codebookRowSign ? blockColorShiftedR - codebookValueShifted : blockColorShiftedR + codebookValueShifted;
-	assign texelColorShiftedG = codebookRowSign ? blockColorShiftedG - codebookValueShifted : blockColorShiftedG + codebookValueShifted;
-	assign texelColorShiftedB = codebookRowSign ? blockColorShiftedB - codebookValueShifted : blockColorShiftedB + codebookValueShifted;
+	assign texelColorShiftedR = pixelIndexValue[1] ? blockColorShiftedR - codebookValueShifted : blockColorShiftedR + codebookValueShifted;
+	assign texelColorShiftedG = pixelIndexValue[1] ? blockColorShiftedG - codebookValueShifted : blockColorShiftedG + codebookValueShifted;
+	assign texelColorShiftedB = pixelIndexValue[1] ? blockColorShiftedB - codebookValueShifted : blockColorShiftedB + codebookValueShifted;
 
 
 	// ETC2 T-Mode decoding
@@ -198,27 +192,80 @@ module anfFl_tex_etc2Decoder
 	assign tG1 = {2{blueChannel[3:0]}};
 	assign tB1 = {2{cwf[7:4]}};
 
-	wire [2:0] tCodeword;
-	wire [7:0] tCodevalue;
+	wire [2:0] tDistIndex;
+	wire [7:0] tDist;
 	wire [1:0] tMode;
 
-	assign tCodeword = {cwf[3:2],cwf[0]};
-	assign tCodevalue = codebookETC2[tCodeword];
-	assign tMode = pixelIndicies[texelIndex +: 2];
+	assign tDistIndex = {cwf[3:2],cwf[0]};
+	assign tDist = codebookETC2[tDistIndex];
+	assign tMode = pixelIndexValue;
 
 	wire [7:0] tAddend;
 	wire [23:0] tColor;
 
-	wire [7:0] tResR;
-	wire [7:0] tResG;
-	wire [7:0] tResB;
+	wire [9:0] tResR;
+	wire [9:0] tResG;
+	wire [9:0] tResB;
 
-	assign tAddend = tMode[1] ? ~tCodevalue + 1 : tCodevalue;
+	assign tAddend = tMode[1] ? -tDist : tDist;
 	assign tColor = |tMode ?  {tR1, tG1, tB1} : {tR0, tG0, tB0};
 
-	assign tResR = tMode[0] ? tColor[23:16] + tAddend : tColor[23:16];
-	assign tResG = tMode[0] ? tColor[15:8] + tAddend : tColor[15:8];
-	assign tResB = tMode[0] ? tColor[7:0] + tAddend : tColor[7:0];
+	assign tResR = tMode[0] ? {1'b0, tColor[23:16], 1'b0} + {1'b0, tAddend, 1'b0} : {1'b0, tColor[23:16], 1'b0};
+	assign tResG = tMode[0] ? {1'b0, tColor[15:8], 1'b0} + {1'b0, tAddend, 1'b0} : {1'b0, tColor[15:8], 1'b0};
+	assign tResB = tMode[0] ? {1'b0, tColor[7:0], 1'b0} + {1'b0, tAddend, 1'b0} : {1'b0, tColor[7:0], 1'b0};
+	
+
+	// ETC2 H-Mode decoding
+
+	wire [3:0] hR0;
+	wire [3:0] hG0;
+	wire [3:0] hB0;
+
+	wire [3:0] hR1;
+	wire [3:0] hG1;
+	wire [3:0] hB1;
+
+	assign hR0 = data[62:59];
+	assign hG0 = {data[58:56], data[52]};
+	assign hB0 = {data[51], data[49:47]};
+
+	assign hR1 = data[47:44];
+	assign hG1 = data[42:39];
+	assign hB1 = data[38:35];
+
+	wire [11:0] hVal0;
+	wire [11:0] hVal1;
+
+	assign hVal0 = {hR0, hG0, hB0};
+	assign hVal1 = {hR1, hG1, hB1};
+
+	wire [1:0] hMode;
+	wire [2:0] hDistIndex;
+	wire [7:0] hDist;
+
+	assign hMode = pixelIndexValue;
+	assign hDistIndex = {data[34], data[32], hVal0 >= hVal1};
+	assign hDist = codebookETC2[hDistIndex];
+
+	wire [7:0] hBaseR;
+	wire [7:0] hBaseG;
+	wire [7:0] hBaseB;
+	wire [7:0] hAddend;
+
+	assign hBaseR = hMode[1] ? {2{hR1}} : {2{hR0}};
+	assign hBaseG = hMode[1] ? {2{hG1}} : {2{hG0}};
+	assign hBaseB = hMode[1] ? {2{hB1}} : {2{hB0}};
+
+	assign hAddend = hMode[0] ? -hDist : hDist;
+
+	wire [9:0] hResR;
+	wire [9:0] hResG;
+	wire [9:0] hResB;
+
+	assign hResR = {1'b0, hBaseR, 1'b0} + {1'b0, hAddend, 1'b0};
+	assign hResG = {1'b0, hBaseG, 1'b0} + {1'b0, hAddend, 1'b0};
+	assign hResB = {1'b0, hBaseB, 1'b0} + {1'b0, hAddend, 1'b0};
+
 
 
 	always @(*) begin
@@ -226,11 +273,47 @@ module anfFl_tex_etc2Decoder
 		if (diff && |{diffOverflowR, diffOverflowG, diffOverflowB}) begin // ETC2 Modes
 			if (diffOverflowR) begin // T-mode
 
-				R = tResR;
-				G = tResG;
-				B = tResB;
+				R = tResR[8:1];
+				G = tResG[8:1];
+				B = tResB[8:1];
+
+				//Clamps
+				if (tResR[0]) 
+					R = 8'h00;
+				else if (tResR[9]) 
+					R = 8'hFF;
+
+				if (tResG[0])
+					G = 8'h00;
+				else if(tResG[9])
+					G = 8'hFF;
+
+				if (tResB[0])
+					B = 8'h00;
+				else if (tResB[9])
+					B = 8'hFF;
 
 			end else if (diffOverflowG) begin // H-mode
+
+				R = hResR[8:1];
+				G = hResG[8:1];
+				B = hResB[8:1];
+
+				//Clamps
+				if (hResR[0]) 
+					R = 8'h00;
+				else if (hResR[9]) 
+					R = 8'hFF;
+
+				if (hResG[0])
+					G = 8'h00;
+				else if(hResG[9])
+					G = 8'hFF;
+
+				if (hResB[0])
+					B = 8'h00;
+				else if (hResB[9])
+					B = 8'hFF;
 
 			end else if (diffOverflowB) begin // Planar mode
 			
