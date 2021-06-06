@@ -18,10 +18,10 @@ YOSYS_CMD = $(YOSYS) $(YOSYS_FLAGS)
 
 ifeq ($(MODULE),)
 COMPILE.v = floof.v
-CXXTRL_OUTPUT = ../build/rtl/floof.h
+CXXTRL_OUTPUT ?= ../build/rtl/floof.h
 else
 COMPILE.v = $(MODULE)
-CXXTRL_OUTPUT = $(addprefix ../build/rtl/, rtl_$(subst .v,.h,$(subst /,_,$(MODULE))))
+CXXTRL_OUTPUT ?= $(addprefix ../build/rtl/, rtl_$(subst .v,.h,$(subst /,_,$(MODULE))))
 endif
 
 cxxrtl: builddir lint
@@ -29,7 +29,7 @@ cxxrtl: builddir lint
 
 
 VERILATOR ?= verilator
-VERILATOR_FLAGS += --lint-only
+VERILATOR_FLAGS += --lint-only -Wall
 VERILATOR_CMD = $(VERILATOR) $(VERILATOR_FLAGS) $(COMPILE.v)
 
 lint:
