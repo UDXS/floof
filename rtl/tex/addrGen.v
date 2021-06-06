@@ -28,7 +28,9 @@ module anfFl_tex_addrGen
 
 	localparam fmt_RGB_ETC2 = 5'b000_10;
 	localparam fmt_RGBA_ETC2 = 5'b001_10;
+	localparam fmt_RGBA_ETC2_PUNCHTHROUGH = 5'b010_10;
 	localparam fmt_R_EAC_UNSIGNED = 5'b100_10;
+	localparam fmt_R_EAC_SIGNED = 5'b101_10;
 	
 	localparam fmt_RGB_24_TILED = 5'b000_11;
 	localparam fmt_RGBA_32_TILED = 5'b001_11;
