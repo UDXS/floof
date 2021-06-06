@@ -1,2 +1,4 @@
 tests/*/build
 build
+
+.vscode
