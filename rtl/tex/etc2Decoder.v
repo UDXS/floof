@@ -197,24 +197,13 @@ module anfFl_tex_etc2Decoder
 	assign codebookValueIndex = {codeword, pixelIndexValue[0]};
 	assign codebookValueUnsigned = codebookETC1[codebookValueIndex];
 
-	// Move 8-bit value into middle of 10-bit container to allow underflow/overflow checking.
-	wire [9:0] blockColorShiftedR;
-	wire [9:0] blockColorShiftedG;
-	wire [9:0] blockColorShiftedB;
-	wire [9:0] codebookValueShifted;
+	wire [7:0] texelColorR;
+	wire [7:0] texelColorG;
+	wire [7:0] texelColorB;
 
-	wire [9:0] texelColorShiftedR;
-	wire [9:0] texelColorShiftedG;
-	wire [9:0] texelColorShiftedB;
-
-	assign blockColorShiftedR = {1'b0, quadColor[quadIndex][23:16], 1'b0};
-	assign blockColorShiftedG = {1'b0, quadColor[quadIndex][15:8], 1'b0};
-	assign blockColorShiftedB = {1'b0, quadColor[quadIndex][7:0], 1'b0};
-	assign codebookValueShifted = {1'b0, codebookValueUnsigned, 1'b0};
-
-	assign texelColorShiftedR = pixelIndexValue[1] ? blockColorShiftedR - codebookValueShifted : blockColorShiftedR + codebookValueShifted;
-	assign texelColorShiftedG = pixelIndexValue[1] ? blockColorShiftedG - codebookValueShifted : blockColorShiftedG + codebookValueShifted;
-	assign texelColorShiftedB = pixelIndexValue[1] ? blockColorShiftedB - codebookValueShifted : blockColorShiftedB + codebookValueShifted;
+	assign texelColorR = pixelIndexValue[1] ? subSat(quadColor[quadIndex][23:16], codebookValueShifted) : addSat(blockColorShiftedR + codebookValueUnsigned);
+	assign texelColorG = pixelIndexValue[1] ? subSat(quadColor[quadIndex][15:8], codebookValueShifted) : addSat(blockColorShiftedG + codebookValueUnsigned);
+	assign texelColorB = pixelIndexValue[1] ? subSat(quadColor[quadIndex][7:0], codebookValueShifted) : addSat(blockColorShiftedB + codebookValueUnsigned);
 
 
 	// ETC2 T-Mode decoding
@@ -246,16 +235,16 @@ module anfFl_tex_etc2Decoder
 	wire [7:0] tAddend;
 	wire [23:0] tColor;
 
-	wire [9:0] tResR;
-	wire [9:0] tResG;
-	wire [9:0] tResB;
+	wire [7:0] tResR;
+	wire [7:0] tResG;
+	wire [7:0] tResB;
 
 	assign tAddend = tMode[1] ? -tDist : tDist;
 	assign tColor = |tMode ?  {tR1, tG1, tB1} : {tR0, tG0, tB0};
 
-	assign tResR = tMode[0] ? {1'b0, tColor[23:16], 1'b0} + {1'b0, tAddend, 1'b0} : {1'b0, tColor[23:16], 1'b0};
-	assign tResG = tMode[0] ? {1'b0, tColor[15:8], 1'b0} + {1'b0, tAddend, 1'b0} : {1'b0, tColor[15:8], 1'b0};
-	assign tResB = tMode[0] ? {1'b0, tColor[7:0], 1'b0} + {1'b0, tAddend, 1'b0} : {1'b0, tColor[7:0], 1'b0};
+	assign tResR = tMode[0] ? addSat(tColor[23:16], tAddend) : tColor[23:16]
+	assign tResG = tMode[0] ? addSat(tColor[15:8], tAddend) : tColor[15:8]
+	assign tResB = tMode[0] ? addSat(tColor[7:0], tAddend) : tColor[7:0]
 	
 
 	// ETC2 H-Mode decoding
@@ -301,13 +290,13 @@ module anfFl_tex_etc2Decoder
 
 	assign hAddend = hMode[0] ? -hDist : hDist;
 
-	wire [9:0] hResR;
-	wire [9:0] hResG;
-	wire [9:0] hResB;
+	wire [7:0] hResR;
+	wire [7:0] hResG;
+	wire [7:0] hResB;
 
-	assign hResR = {1'b0, hBaseR, 1'b0} + {1'b0, hAddend, 1'b0};
-	assign hResG = {1'b0, hBaseG, 1'b0} + {1'b0, hAddend, 1'b0};
-	assign hResB = {1'b0, hBaseB, 1'b0} + {1'b0, hAddend, 1'b0};
+	assign hResR = addSat(hBaseR, hAddend);
+	assign hResG = addSat(hBaseG, hAddend);
+	assign hResB = addSat(hBaseB, hAddend);
 
 
 	// ETC2 Planar Mode decoding
@@ -340,84 +329,38 @@ module anfFl_tex_etc2Decoder
 	wire [7:0] pG;
 	wire [7:0] pB;
 
-	assign pR =  addSat(addSat(mul8Sx2U(pRh - pR0, xTexel)[9:2], mul8Sx2U(pRv - pR0, xTexel)[9:2]) + pR0);
-	assign pG =  addSat(addSat(mul8Sx2U(pGh - pG0, xTexel)[9:2], mul8Sx2U(pGv - pG0, xTexel)[9:2]) + pG0);
-	assign pB =  addSat(addSat(mul8Sx2U(pBh - pB0, xTexel)[9:2], mul8Sx2U(pBv - pB0, xTexel)[9:2]) + pB0);
+	assign pR =  addSat(addSat(mul8Sx2U(pRh - pR0, xTexel) >> 2, mul8Sx2U(pRv - pR0, xTexel) >> 2) + pR0);
+	assign pG =  addSat(addSat(mul8Sx2U(pGh - pG0, xTexel) >> 2, mul8Sx2U(pGv - pG0, xTexel) >> 2) + pG0);
+	assign pB =  addSat(addSat(mul8Sx2U(pBh - pB0, xTexel) >> 2, mul8Sx2U(pBv - pB0, xTexel) >> 2) + pB0);
 
 	always @(*) begin
 
 		if (diff && |{diffOverflowR, diffOverflowG, diffOverflowB}) begin // ETC2 Modes
 			if (diffOverflowR) begin // T-mode
 
-				R = tResR[8:1];
-				G = tResG[8:1];
-				B = tResB[8:1];
-
-				//Clamps
-				if (tResR[0]) 
-					R = 8'h00;
-				else if (tResR[9]) 
-					R = 8'hFF;
-
-				if (tResG[0])
-					G = 8'h00;
-				else if(tResG[9])
-					G = 8'hFF;
-
-				if (tResB[0])
-					B = 8'h00;
-				else if (tResB[9])
-					B = 8'hFF;
+				R = tResR;
+				G = tResG;
+				B = tResB;
 
 			end else if (diffOverflowG) begin // H-mode
 
-				R = hResR[8:1];
-				G = hResG[8:1];
-				B = hResB[8:1];
-
-				//Clamps
-				if (hResR[0]) 
-					R = 8'h00;
-				else if (hResR[9]) 
-					R = 8'hFF;
-
-				if (hResG[0])
-					G = 8'h00;
-				else if(hResG[9])
-					G = 8'hFF;
-
-				if (hResB[0])
-					B = 8'h00;
-				else if (hResB[9])
-					B = 8'hFF;
+				R = hResR;
+				G = hResG;
+				B = hResB;
 
 			end else if (diffOverflowB) begin // Planar mode
+
 				R = pR;
 				G = pG;
 				B = pB;
+
 			end
 
 		end else begin // ETC1 mode
 			
-			R = texelColorShiftedR[8:1];
-			G = texelColorShiftedR[8:1];
-			B = texelColorShiftedR[8:1];
-
-			//Clamps
-			if (texelColorShiftedR[0]) 
-				R = 8'h00;
-			else if (texelColorShiftedR[9]) 
-				R = 8'hFF;
-			
-			if (texelColorShiftedG[0])
-				G = 8'h00;
-			else if(texelColorShiftedG[9])
-				G = 8'hFF;
-			
-			if (texelColorShiftedB[0])
-				B = 8'h00;
-			else if (texelColorShiftedB[9])
-				B = 8'hFF;
+			R = texelColorR;
+			G = texelColorG;
+			B = texelColorB;
 		
 		end
 
