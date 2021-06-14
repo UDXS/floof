@@ -8,11 +8,54 @@ ETC2 Texture Block Decoder
 `default_nettype none
 
 
-function [7:0] extend5bTo8b(input [4:0] in);
-	reg [9:0] extended;
-	extended = {2{in}};
+function [7:0] ext5bTo8b(input [4:0] in);
+	ext5bTo8b = {in, in[4:2]}}
+endfunction
 
-	extend5bTo8b = extended[9:2];
+function [7:0] ext6bTo8b(input [5:0] in);
+	ext6bTo8b = {in, in[5:4]};
+endfunction
+
+function #(parameter W) [W-1:0] addSat
+	(
+		input [W-1] addendA;
+		input [W-1] addendB;
+	);
+
+	reg [W:0] unsaturatedOut;
+	unsaturatedOut = addendA + addendB;
+
+	addSat = unsaturatedOut[W] ? {W{1'b1}} : unsaturatedOut[W-1:0];
+endfunction
+
+function #(parameter W) [W-1:0] subSat
+	(
+		input [W-1] minuend;
+		input [W-1] subtrahend;
+	);
+	reg [W:0] unsaturatedOut;
+	unsaturatedOut = {minuend, 1'b0} + {subtrahend, 1'b0};
+
+	subSat = unsaturatedOut[0] ? {W{1'b0}} : unsaturatedOut[W:1];
+endfunction
+
+
+function [9:0] mul8Sx2U(
+		input [7:0] multiplicand;
+		input [1:0] multiplier;
+	);
+	reg [7:0] multiplicandUnsigned;
+	reg [7:0] mulA;
+	reg [8:0] mulB;
+	reg [9:0] mulResUnsigned;
+	
+	multiplicandUnsigned = multiplicand[7] ? -multiplicand : multiplicand;
+	mulA = multiplier[0] ? multiplicandUnsigned : 8'b0;
+	mulB = multiplier[1] ? {multiplicandUnsigned, 1'b0} : 9'b0;
+	mulResUnsigned = mulA + mulB;
+
+	mul8Sx2U = multiplicand[7] ? -mulRegUnsigned : mulResUnsigned
+	 
 endfunction
 
 
@@ -87,9 +130,9 @@ module anfFl_tex_etc2Decoder
 	assign diffG = {{2{greenChannel[2]}}, greenChannel[2:0]};
 	assign diffB = {{2{blueChannel[2]}}, blueChannel[2:0]};
 
-	assign c0R = diff ? extend5bTo8b(baseR) : {2{redChannel[7:4]}};
-	assign c0G = diff ? extend5bTo8b(baseG) : {2{blueChannel[7:4]}};
-	assign c0B = diff ? extend5bTo8b(baseB) : {2{greenChannel[7:4]}};
+	assign c0R = diff ? ext5bTo8b(baseR) : {2{redChannel[7:4]}};
+	assign c0G = diff ? ext5bTo8b(baseG) : {2{blueChannel[7:4]}};
+	assign c0B = diff ? ext5bTo8b(baseB) : {2{greenChannel[7:4]}};
 
 	wire [5:0] shortDiffR;
 	wire [5:0] shortDiffG;
@@ -99,9 +142,9 @@ module anfFl_tex_etc2Decoder
 	assign shortDiffG = baseG + diffG;
 	assign shortDiffB = baseB + diffB;
 
-	assign c1R = diff ? extend5bTo8b(shortDiffR[4:0]) : {2{redChannel[3:0]}};
-	assign c1G = diff ? extend5bTo8b(shortDiffG[4:0]) : {2{greenChannel[3:0]}};
-	assign c1B = diff ? extend5bTo8b(shortDiffB[4:0]) : {2{blueChannel[3:0]}};
+	assign c1R = diff ? ext5bTo8b(shortDiffR[4:0]) : {2{redChannel[3:0]}};
+	assign c1G = diff ? ext5bTo8b(shortDiffG[4:0]) : {2{greenChannel[3:0]}};
+	assign c1B = diff ? ext5bTo8b(shortDiffB[4:0]) : {2{blueChannel[3:0]}};
 
 	// ETC2 modes are engaged by triggering overflow on various channels in differential mode.
 	wire diffOverflowR;
@@ -267,6 +310,39 @@ module anfFl_tex_etc2Decoder
 	assign hResB = {1'b0, hBaseB, 1'b0} + {1'b0, hAddend, 1'b0};
 
 
+	// ETC2 Planar Mode decoding
+
+	wire [7:0] pR0;
+	wire [7:0] pG0;
+	wire [7:0] pB0;
+
+	assign pR0 = ext5bTo8b(data[62:57]);
+	assign pG0 = ext6bTo8b({data[56], data[54:49]});
+	assign pB0 = ext5bTo8b({data[48], data[44:43], data[41:40]});
+
+	wire [7:0] pRh;
+	wire [7:0] pGh;
+	wire [7:0] pBh;
+
+	assign pRh = ext5bTo8b({data[38:34], data[32]});
+	assign pGh = ext6bTo8b(data[31:25]);
+	assign pBh = ext5bTo8b(data[24:19]);
+
+	wire [7:0] pRv;
+	wire [7:0] pGv;
+	wire [7:0] pBv;
+
+	assign pRv = ext5bTo8b(data[18:13]);
+	assign pGv = ext6bTo8b(data[12:6]);
+	assign pBv = ext5bTo8b(data[5:0]);
+
+	wire [7:0] pR;
+	wire [7:0] pG;
+	wire [7:0] pB;
+
+	assign pR =  addSat(addSat(mul8Sx2U(pRh - pR0, xTexel)[9:2], mul8Sx2U(pRv - pR0, xTexel)[9:2]) + pR0);
+	assign pG =  addSat(addSat(mul8Sx2U(pGh - pG0, xTexel)[9:2], mul8Sx2U(pGv - pG0, xTexel)[9:2]) + pG0);
+	assign pB =  addSat(addSat(mul8Sx2U(pBh - pB0, xTexel)[9:2], mul8Sx2U(pBv - pB0, xTexel)[9:2]) + pB0);
 
 	always @(*) begin
 
@@ -316,7 +392,9 @@ module anfFl_tex_etc2Decoder
 					B = 8'hFF;
 
 			end else if (diffOverflowB) begin // Planar mode
-			
+				R = pR;
+				G = pG;
+				B = pB;
 			end
 
 		end else begin // ETC1 mode
