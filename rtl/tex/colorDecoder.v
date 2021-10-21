@@ -22,23 +22,23 @@ module anfFl_tex_colorDecoder
 	);
 
 	localparam fmt_RGB_24 = 5'b000_00;
-	localparam fmt_RGBA_32 = 5'b001_00;
+	localparam fmt_ARGB_32 = 5'b001_00;
 
 	localparam fmt_RGB_16 = 5'b000_01;
-	localparam fmt_RGBA_16 = 5'b001_01;
+	localparam fmt_ARGB_16 = 5'b001_01;
 	localparam fmt_RGB_15 = 5'b010_01;
-	localparam fmt_RGBA_15_PUNCHTHROUGH = 5'b011_01;
+	localparam fmt_ARGB_15_PUNCHTHROUGH = 5'b011_01;
 
 	localparam fmt_RGB_ETC2 = 5'b000_10;
-	localparam fmt_RGBA_ETC2 = 5'b001_10;
-	localparam fmt_RGBA_ETC2_PUNCHTHROUGH = 5'b010_10;
+	localparam fmt_ARGB_ETC2 = 5'b001_10;
+	localparam fmt_ARGB_ETC2_PUNCHTHROUGH = 5'b010_10;
 	localparam fmt_R_EAC_UNSIGNED = 5'b100_10;
 	localparam fmt_R_EAC_SIGNED = 5'b101_10;
 	
 	localparam fmt_RGB_24_TILED = 5'b000_11;
-	localparam fmt_RGBA_32_TILED = 5'b001_11;
+	localparam fmt_ARGB_32_TILED = 5'b001_11;
 	localparam fmt_RGB_16_TILED = 5'b010_11;
-	localparam fmt_RGBA_16_TILED = 5'b011_11;
+	localparam fmt_ARGB_16_TILED = 5'b011_11;
 	localparam fmt_R_8_TILED = 5'b100_11;
 	localparam fmt_R_16_TILED = 5'b101_11;
 
@@ -60,7 +60,7 @@ module anfFl_tex_colorDecoder
 				R = data[7:0];
 				G = data[15:8];
 				B = data[23:16];
-				if (format == fmt_RGBA_32)
+				if (format == fmt_ARGB_32)
 					A = data[31:24];
 				else
 					A = 8'hFF;
@@ -75,7 +75,7 @@ module anfFl_tex_colorDecoder
 						A = 8'hFF;
 					end
 
-					fmt_RGBA_16: begin
+					fmt_ARGB_16: begin
 						R = {2{data[3:0]}};
 						G = {2{data[7:4]}};
 						B = {2{data[11:8]}};
@@ -83,11 +83,11 @@ module anfFl_tex_colorDecoder
 					end
 
 					fmt_RGB_15:
-					fmt_RGBA_15_PUNCHTHROUGH: begin
+					fmt_ARGB_15_PUNCHTHROUGH: begin
 						R = {data[4:0], data[4:2]]};
 						G = {data[9:5], data[9:7]};
 						B = {data[14:10], data[14:13]};
-						if(format == fmt_RGBA_15_PUNCHTHROUGH)
+						if(format == fmt_ARGB_15_PUNCHTHROUGH)
 							A = {8{data[15]}};
 						else 
 							A = 8'hFF;
@@ -97,17 +97,17 @@ module anfFl_tex_colorDecoder
 			end
 
 			fc_COMPRESSED: begin
-				
+				// ETC2 Decoder
 			end
 
 			fc_TILED: begin
 				case(format)
 					fmt_RGB_24_TILED:
-					fmt_RGBA_32_TILED: begin
+					fmt_ARGB_32_TILED: begin
 						R = data[7:0];
 						G = data[15:8];
 						B = data[23:16];
-						if (format == fmt_RGBA_32_TILED)
+						if (format == fmt_ARGB_32_TILED)
 							A = data[31:24];
 						else
 							A = 8'hFF;
@@ -120,7 +120,7 @@ module anfFl_tex_colorDecoder
 						A = 8'hFF;
 					end
 
-					fmt_RGBA_16_TILED: begin
+					fmt_ARGB_16_TILED: begin
 						R = {2{data[3:0]}};
 						G = {2{data[7:4]}};
 						B = {2{data[11:8]}};

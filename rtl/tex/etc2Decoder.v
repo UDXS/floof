@@ -9,17 +9,17 @@ ETC2 Texture Block Decoder
 
 
 function [7:0] ext5bTo8b(input [4:0] in);
-	ext5bTo8b = {in, in[4:2]}}
+	ext5bTo8b = {in, in[4:2]};
 endfunction
 
 function [7:0] ext6bTo8b(input [5:0] in);
 	ext6bTo8b = {in, in[5:4]};
 endfunction
 
-function #(parameter W) [W-1:0] addSat
+function [W-1:0] addSat #(parameter W) 
 	(
-		input [W-1] addendA;
-		input [W-1] addendB;
+		input [W-1] addendA,
+		input [W-1] addendB
 	);
 
 	reg [W:0] unsaturatedOut;
@@ -28,10 +28,10 @@ function #(parameter W) [W-1:0] addSat
 	addSat = unsaturatedOut[W] ? {W{1'b1}} : unsaturatedOut[W-1:0];
 endfunction
 
-function #(parameter W) [W-1:0] subSat
+function [W-1:0] subSat #(parameter W) 
 	(
-		input [W-1] minuend;
-		input [W-1] subtrahend;
+		input [W-1] minuend,
+		input [W-1] subtrahend
 	);
 	reg [W:0] unsaturatedOut;
 	unsaturatedOut = {minuend, 1'b0} + {subtrahend, 1'b0};

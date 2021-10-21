@@ -9,18 +9,18 @@
 enum format
 {
 	fmt_RGB_24 = 0b00000,
-	fmt_RGBA_32 = 0b00100,
+	fmt_ARGB_32 = 0b00100,
 	fmt_RGB_16 = 0b00001,
-	fmt_RGBA_16 = 0b00101,
+	fmt_ARGB_16 = 0b00101,
 	fmt_RGB_15 = 0b01001,
-	fmt_RGBA_15_PUNCHTHROUGH = 0b01101,
+	fmt_ARGB_15_PUNCHTHROUGH = 0b01101,
 	fmt_RGB_ETC2 = 0b00010,
-	fmt_RGBA_ETC2 = 0b00110,
+	fmt_ARGB_ETC2 = 0b00110,
 	fmt_R_EAC_UNSIGNED = 0b10010,
 	fmt_RGB_24_TILED = 0b00011,
-	fmt_RGBA_32_TILED = 0b00111,
+	fmt_ARGB_32_TILED = 0b00111,
 	fmt_RGB_16_TILED = 0b10011,
-	fmt_RGBA_16_TILED = 0b10111
+	fmt_ARGB_16_TILED = 0b10111
 };
 
 struct TexMeta
@@ -80,13 +80,13 @@ int main()
 	testAddrGen(0, 1, meta8x8_rgb24, 0x00000018);
 	testAddrGen(0, 4, meta8x8_rgb24, 0x00000060);
 
-	puts("\nRGBA32 8 x 8");
-	TexMeta meta16x16_rgba32 {.fmt = format::fmt_RGBA_32, .heightExp = 4, .widthExp = 4, .address = 0x00000000};
-	testAddrGen(0, 0, meta16x16_rgba32, 0x00000000);
-	testAddrGen(4, 0, meta16x16_rgba32, 0x0000000C);
-	testAddrGen(7, 0, meta16x16_rgba32, 0x00000015);
-	testAddrGen(0, 1, meta16x16_rgba32, 0x00000018);
-	testAddrGen(0, 4, meta16x16_rgba32, 0x00000060);
+	puts("\nARGB32 8 x 8");
+	TexMeta meta16x16_ARGB32 {.fmt = format::fmt_ARGB_32, .heightExp = 4, .widthExp = 4, .address = 0x00000000};
+	testAddrGen(0, 0, meta16x16_ARGB32, 0x00000000);
+	testAddrGen(4, 0, meta16x16_ARGB32, 0x0000000C);
+	testAddrGen(7, 0, meta16x16_ARGB32, 0x00000015);
+	testAddrGen(0, 1, meta16x16_ARGB32, 0x00000018);
+	testAddrGen(0, 4, meta16x16_ARGB32, 0x00000060);
 
 	std::ofstream waves("build/waves.vcd");
 	waves << vcd.buffer;
