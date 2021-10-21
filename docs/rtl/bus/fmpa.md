@@ -2,12 +2,8 @@
 
 # Floof MultiProcessor Access Interface
 The FMP's data interface (DIF) connects the multiprocessor to the following:
-- [MEM]() for general memory access
 - [TEX](../tex/tex.md) for texture data access
 - [RAST]() for raster unit access
-- [TRIG]() for trigonometric computations
-- [SQRT]() for (inverse) square root computations
-- [SYS]() for system state control
 
 It does this through a shared bus known as the MultiProcessor Access Bus (FMPA).
 

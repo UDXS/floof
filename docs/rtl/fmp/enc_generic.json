@@ -1,0 +1,7 @@
+{reg: [
+
+    {bits:23, name: "Parameters"},
+    {bits:5, name: "Op"},
+    {bits:4, name: "Op Group"},
+    
+  ], config: {bits: 32, hspace: "555"}}

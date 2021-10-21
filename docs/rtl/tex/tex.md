@@ -57,20 +57,20 @@ Width and height are stored as exponents to the base of 2 i.e `width = 2^widthEx
 | Texture Format ID | Name                     | Notes                   |
 | ----------------- | ------------------------ | ----------------------- |
 | `0b000 00`        | `RGB_24`                 | 8, 8, 8                 |
-| `0b001 00`        | `RGBA_32`                | 8, 8, 8, 8              |
+| `0b001 00`        | `ARGB_32`                | 8, 8, 8, 8              |
 | `0b000 01`        | `RGB_16`                 | 5, 6, 5                 |
-| `0b001 01`        | `RGBA_16`                | 4, 4, 4, 4              |
+| `0b001 01`        | `ARGB_16`                | 4, 4, 4, 4              |
 | `0b010 01`        | `RGB_15`                 | 5, 5, 5 with MSB unused |
-| `0b011 01`        | `RGBA_15_PUNCHTHROUGH`   | 5, 5, 5, 1              |
+| `0b011 01`        | `ARGB_15_PUNCHTHROUGH`   | 5, 5, 5, 1              |
 | `0b000 10`        | `RGB_ETC2`               |                         |
-| `0b001 10`        | `RGBA_ETC2`              |                         |
-| `0b010 10`        | `RGBA_ETC2_PUNCHTHROUGH` |                         |
+| `0b001 10`        | `ARGB_ETC2`              |                         |
+| `0b010 10`        | `ARGB_ETC2_PUNCHTHROUGH` |                         |
 | `0b100 10`        | `R_EAC_UNSIGNED`         |                         |
 | `0b101 10`        | `R_EAC_SIGNED`           |                         |
 | `0b000 11`        | `RGB_24_TILED`           | 16x16 tiles             |
-| `0b001 11`        | `RGBA_32_TILED`          | 16x16 tiles             |
+| `0b001 11`        | `ARGB_32_TILED`          | 16x16 tiles             |
 | `0b010 11`        | `RGB_16_TILED`           | 16x16 tiles             |
-| `0b011 11`        | `RGBA_16_TILED`          | 16x16 tiles             |
+| `0b011 11`        | `ARGB_16_TILED`          | 16x16 tiles             |
 | `0b100 11`        | `R_8_TILED`              | 16x16 tiles             |
 | `0b101 11`        | `R_16_TILED`             | 16x16 tiles             |
 
